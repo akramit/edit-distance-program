@@ -5,6 +5,7 @@ We write the program to print the entire Dynamic Programming Table for edit dist
 The table contains the following information.
 * Given a string X and a string Y, ED(i,j) in the grid denotes the minimum edit distance between the strings X[1,..,i] and Y[1,..,j].  
 * The value of the cell ED(i,j) is of the format "{L,B,D}+val" (e.g. L25, D14 etc.) where L represents when min ED(i,j) was obtained from left, and bottom, diagonal for B and D respectively. The 'val' is the min edit distance at cell (i,j).
+
 Note: ED[0][0] is lower left cell and ED[m][n] is upper right cell.
 
 ## Installation
