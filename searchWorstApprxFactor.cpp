@@ -3,8 +3,10 @@
 #include<iomanip>
 #include<fstream>
 #include<time.h>
+#include<string>
 
 using namespace std;
+
 int findRandom()
 {
     int num = ((int)rand() % 2);
@@ -13,12 +15,9 @@ int findRandom()
 
 string getRandomBinaryString(int n,time_t time){
   srand(time);
-
     string S = "";
-
     // Iterate over the range [0, N - 1]
     for (int i = 0; i < n; i++) {
-
         // Store the random number
         int x = findRandom();
         // Append it to the string
@@ -122,28 +121,34 @@ int calculateApproxED(string x, string y,vector<vector<char> > &align){
 
 int main(){
   string x,y;
-  freopen("EDSearchSpace.txt","w",stdout);
+  int len=31;
+  string filename="EDSearchSpace_new_len"+to_string(len)+".txt";
+  //freopen(filename,"w",stdout);
+  ofstream cout(filename);
   float maxApproxFactor= 0.0;
-  //All binary strings of length 10
-  int iter=1000000;
+  //All binary strings of length
+  int iter=20000000;
   while(iter--){
-    cout<<"################################"<<endl;
-    x=getRandomBinaryString(10,time(NULL));//random binary string
-    y=getRandomBinaryString(10,time(NULL)+iter);//random binary String
+
+    x=getRandomBinaryString(len,time(NULL));//random binary string
+    y=getRandomBinaryString(len-2,time(NULL)+iter);//random binary String
     int n=x.length();
   	int m=y.length();
     vector<vector<char> > align(m+1,vector<char>(n+1,' ')); //Alignment Vector
     int optEditDistance= calculateED(x,y,align);
     int approxEditDistance = calculateApproxED(x,y,align);
-    cout<<endl<<x<<endl<<y<<endl;
-  	cout<<"Edit Distance = "<< optEditDistance<<endl;
-  	cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
+
     float approxFactor= (float)approxEditDistance/optEditDistance;
-  	cout<<"Approximation Factor = "<<approxFactor<<endl;
-    if((approxFactor - maxApproxFactor) > 0.01 )
-      maxApproxFactor=approxFactor;
-    cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
-  	cout<<endl;
+  	
+    if((approxFactor - maxApproxFactor) > 0.01 ){
+      	maxApproxFactor=approxFactor;
+      	cout<<"################################"<<endl;
+      	cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
+    	cout<<"Edit Distance = "<< optEditDistance<<endl;
+    	cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
+		cout<<"Approximation Factor = "<<approxFactor<<endl;
+      	cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
+    }
   }
   return 0;
 }
