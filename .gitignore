@@ -2,3 +2,5 @@
 EDSearchSpace copy.txt
 EDSearchSpace.txt
 a.out
+*.txt
+*.out

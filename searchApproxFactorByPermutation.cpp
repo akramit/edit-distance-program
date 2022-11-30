@@ -1,17 +1,31 @@
+/*
+    Take x with EDApprox=6 and run for all permutation of x.
+*/
+
 #include<iostream>
 #include<vector>
 #include<iomanip>
 #include<fstream>
 #include<time.h>
 #include<string>
+#include<algorithm>
 
 using namespace std;
 
-//Gives a random binary string
-string getRandomBinaryString(int n){
+int findRandom()
+{
+    int num = ((int)rand() % 2);
+    return num;
+};
+
+string getRandomBinaryString(int n,time_t time){
+  srand(time);
     string S = "";
+    // Iterate over the range [0, N - 1]
     for (int i = 0; i < n; i++) {
-        int x = rand()%2;
+        // Store the random number
+        int x = findRandom();
+        // Append it to the string
         S += to_string(x);
     }
     return S;
@@ -111,55 +125,44 @@ int calculateApproxED(string x, string y,vector<vector<char> > &align){
 };
 
 int main(){
-  string x,y;
-  int len=40;
-  string filename="EDSearchSpace_randomX_insert_del_all"+to_string(len)+".txt";
+  string x,y,z;
+  //x="101110010011111011100011001110";//"00010110110001001001"; max 6.5
+  //x="000000001000110110010001001010";// max 5
+  
+  //Hoping below will provide better apprx factor
+  // Idea is less size of repeated period
+  x="01110000011111110000000001111";
+  z="00000000000000011111111111111";
+  int len=30;
+  string filename="EDSearchSpace_perm_paper_sequence"+to_string(len)+".txt";
+  //freopen(filename,"w",stdout);
   ofstream cout(filename);
   float maxApproxFactor= 0.0;
-  srand(time(0));
-  long iter=1000000;
-  
-  while(iter--){
-    //x=getRandomBinaryString(len);//random binary string
-    //y=getRandomBinaryString(len)
-	//delete one from y
-	for(int i=0;i<len;i++){
-		for(int j=0;j<len;j++){
-			iter++;
-			x=getRandomBinaryString(len);
-			y=x;
-			y.erase(i,1);
-			//insert a char in x
-			y.insert(j,to_string(rand()%2));
-    		int n=x.length();
-  			int m=y.length();
-    		vector<vector<char> > align(m+1,vector<char>(n+1,' ')); //Alignment Vector
-    		int optEditDistance= calculateED(x,y,align);
-			int approxEditDistance = calculateApproxED(x,y,align);
+  //All binary strings of length
+  long iter=1;
+  while(next_permutation(z.begin(),z.end())){
+	iter++;
+	if(iter%1000000==0)
+		printf("%ld \n",iter);
+    //x=getRandomBinaryString(len,time(NULL));
+    y=z;//permutation of x
+    int n=x.length();
+  	int m=y.length();
+    vector<vector<char> > align(m+1,vector<char>(n+1,' ')); //Alignment Vector
+    int optEditDistance= calculateED(x,y,align);
+    int approxEditDistance = calculateApproxED(x,y,align);
 
-			float approxFactor= (float)approxEditDistance/optEditDistance;
-			
-			if(approxFactor > maxApproxFactor){
-				maxApproxFactor=approxFactor;
-				cout<<"################################"<<endl;
-				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
-				cout<<"Edit Distance = "<< optEditDistance<<endl;
-				cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
-				cout<<"Approximation Factor = "<<approxFactor<<endl;
-				cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
-			}
-			/*if(iter%50==0){
-				cout<<"################################"<<endl;
-				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
-				cout<<"Edit Distance = "<< optEditDistance<<endl;
-				cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
-				cout<<"Approximation Factor = "<<approxFactor<<endl;
-				cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
-			}*/
-		}
-	}
-
- }
-
+    float approxFactor= (float)approxEditDistance/optEditDistance;
+  	
+    if((approxFactor - maxApproxFactor) > 0.01 ){
+      	maxApproxFactor=approxFactor;
+      	cout<<"################################"<<endl;
+      	cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
+    	cout<<"Edit Distance = "<< optEditDistance<<endl;
+    	cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
+		cout<<"Approximation Factor = "<<approxFactor<<endl;
+      	cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
+    }
+  }
   return 0;
 }

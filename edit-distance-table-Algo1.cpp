@@ -2,43 +2,73 @@
 1. Compute Edit Distance Table
 2. Show OPT path and Algorithms Path
 3. Show Alignment of Chars as -,|,/,+,* denoting Left, Top, Diagonal, and Tie
-4. ApproxAlgo used is - At (i,j), move in direction from which ED[i][j] was obtained
+4. ApproxAlgo used is -> At (i,j), move in direction from which min ED[i][j]+D/2 was obtained. Tie break is diagonal move
 */
 #include<iostream>
 #include<vector>
 #include<iomanip>
-
+#include<string>
+#include<float.h>
 
 using namespace std;
+
+/*
+	Locate whether ED(i,j)+D/2 is underneath (i,j) or Left of (i,j)
+	returns 'x' if x-index to be incremented and respt. 'y'
+*/
+char findNextMove(int i, int j, vector<vector<int> > & ED){
+	float vert= ED[i][j],hor=ED[i][j];
+    // ED[x'][j] underneath (i,j)
+    for (int z=i;z>=0;z--){
+        float U= ED[z][j] + (float)(i-z)/2;
+        if(U < vert){
+            vert= U;
+        }
+    }
+    // ED[i][x'] left of (i,j)
+    for (int z=j;z>=0;z--){
+        float U= ED[i][z] + (float)(j-z)/2;
+        if(U < hor){
+            hor= U;
+        }
+    }
+    //cout<<"Vert "<<vert<<"\n Hor "<<hor<<endl;
+    if(vert < hor){
+        return 'x';
+    }
+    else if ( vert > hor){
+        return 'y';
+    }
+    else{
+        return 'D';
+    }
+}
+
 /*
 * Finds approxED with designed Algorithm.
-* Replaces Align[i][j]  with '.' highlighting the path by the Algorithm and saves in algoPath.
+* AlgoPath has path by the Algorithm denoted by '.'
 */
-int approxEditDistance(vector<vector<char> > &align, string x, string y,vector<vector<char> >&algoPath){
+int approxEditDistance(string x, string y,vector<vector<int> >&ED,vector<vector<char> >&algoPath){
 	int i=1,j=1,u=0,m=x.length(),n=y.length();
 	while(i<=n && j<=m){
 		algoPath[i][j]='.';
-		if(x[j-1]==y[i-1]){
+        if(x[j-1]==y[i-1]){
 			i++;
 			j++;
 		}
-		else{
-			u++;
-			if(align[i][j]=='|'){ // Go Up on
-				j++;
-			}
-			else if(align[i][j]=='-'){
-				i++;
-			}
-			else if(align[i][j]=='+'){ // Tie breaker
-				j++;
-			}
-			else{
-				i++;
-				j++;
-			}
-			//cout<<i<<" : "<<j<<": "<<u<<endl;
-		}
+		else if(findNextMove(i,j,ED)=='x'){
+            u++;
+            j++;
+        }
+        else if(findNextMove(i,j,ED)=='y'){
+            u++;
+            i++;
+        }
+        else if(findNextMove(i,j,ED)=='D'){
+            u++;
+            i++;
+            j++;
+        }
 	}
 	int unprocessed_chars=0;
 	if(i<n || j <m){
@@ -47,7 +77,7 @@ int approxEditDistance(vector<vector<char> > &align, string x, string y,vector<v
 		else if(m-j > 0)
 			unprocessed_chars+=m-j;
 	}
-	return u+ unprocessed_chars;
+	return u + unprocessed_chars;
 };
 
 void traceOptimumPath(int i, int j, vector<vector<char> > &align, vector<vector<char> > &optPath){
@@ -125,14 +155,7 @@ void showOptAndAlgoPath(vector<vector<char> > &optPath, vector<vector<char> > &a
 int main(){
 
 	string
-	//x="377983722676523043163724904147708069694985201921063119571283049859400604220352146333975113375728503594148610756360741014817528800820666286894043795908954361308468594758592613205696384344294961025972171337572850359414861075636074101481752880082066628689404379590895436130846859475859261320569638434429496102597217",
-	//y="377514143931007465839742569924776101736572452559733364840538364798478318617582392264971811748422741305672228877700112854487260264513275048351882707236905932436140742562981532510658013996976818774500541337572850359414861075636074101481752880082066628689404379590895436130846859475859261320569638434429496102597217";
-	//x="amithiamithiamithi",
-	//y="thiamithiamithiami";   //Approx Factor=2 with above x
-//x="abcdefghijklmnopqrstuvwxyz",
-//y="zyxwvutsrqponmlkjihgfedcba";
-//x="abcdefghij",
-//y="fedcba";
+	
 x="0111011001|01010101",
 y="1101011001|01010101"; //Gives approx factor = 4.5 with new strategy of tie breaking
 //x="00010110110001001001",
@@ -183,16 +206,6 @@ y="1101011001|01010101"; //Gives approx factor = 4.5 with new strategy of tie br
 				else{
 					align[i][j]='-';
 				}
-
-
-				/*if(1+min(ED[i][j-1],ED[i-1][j]) > ED[i-1][j-1])
-					align[i][j]='/';
-				else{
-					if(ED[i][j-1] > ED[i-1][j])
-						align[i][j]='-'; L
-					else
-						align[i][j]='|';
-				}*/
 			}
 			else{ // x[j-1]!=y[i-1]
 				ED[i][j]=min(1+min(ED[i][j-1],ED[i-1][j]) , 1+ ED[i-1][j-1]);
@@ -219,7 +232,7 @@ y="1101011001|01010101"; //Gives approx factor = 4.5 with new strategy of tie br
 	// Save AlgoPath in algoPath
 	vector<vector<char> > algoPath(m+1,vector<char>(n+1,' '));
 	algoPath=align;
-	int approxED=approxEditDistance(align,x,y,algoPath);
+	int approxED=approxEditDistance(x,y,ED,algoPath);
 
 	// Trace the optimum path by ED algorithm
 	vector<vector<char> > optPath(m+1,vector<char>(n+1,' '));

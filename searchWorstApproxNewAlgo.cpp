@@ -1,3 +1,9 @@
+/*
+Startegy: If the OPT path passes from underneath (i,j) go to Right
+		  If the OPT path passes from Left of (i,j) go UP
+*/
+
+
 #include<iostream>
 #include<vector>
 #include<iomanip>
@@ -17,8 +23,23 @@ string getRandomBinaryString(int n){
     return S;
 };
 
+/*
+	Locate whether OPT is underneath (i,j) or Left of (i,j)
+	returns 'x' if x-index to be incremented and respt. 'y'
+*/
+char locateOPTPath(int i, int j, vector<vector<char> > & optPath){
+	if(optPath[i][j]=='O'){ // Go Diagonal
+		return 'D';
+	}
+	for(int z=j;z>=0;z--){
+		if(optPath[i][z]=='O')
+			return 'y';
+	}
+	return 'x';
+}
+
 int calculateED(string x, string y,vector<vector<char> > &align){
-  int n=x.length();
+  	int n=x.length();
 	int m=y.length();
 	vector<vector<int> > ED(m+1,vector<int>(n+1,0));
 	for(int i=0;i<=m;i++){
@@ -52,7 +73,7 @@ int calculateED(string x, string y,vector<vector<char> > &align){
 				}
 			}
 			else{ // x[j-1]!=y[i-1]
-				ED[i][j]=min(1+min(ED[i][j-1],ED[i-1][j]) , 1+ ED[i-1][j-1]);
+				ED[i][j]=min(1+min(ED[i][j-1],ED[i-1][j]) , 2+ ED[i-1][j-1]);
 
 				if(ED[i-1][j]==ED[i][j-1] && ED[i-1][j-1] == ED[i-1][j]){ //All EQUAL alignment=*
 					align[i][j]='*';
@@ -74,28 +95,60 @@ int calculateED(string x, string y,vector<vector<char> > &align){
 	}
   return ED[m][n];
 };
+
+//Trace OPT path for Edit Distance
+void traceOptimumPath(int i, int j, vector<vector<char> > &align, vector<vector<char> > &optPath){
+		if(i<1 || j<1)
+			return;
+
+		if(align[i][j]=='-'){
+			traceOptimumPath(i,j-1,align,optPath);
+			optPath[i][j-1]='O';
+		}
+		else if(align[i][j]=='|'){
+			traceOptimumPath(i-1,j,align,optPath);
+			optPath[i-1][j]='O';
+		}
+		else if(align[i][j]=='+'){
+			traceOptimumPath(i,j-1,align,optPath);
+			traceOptimumPath(i-1,j,align,optPath);
+			optPath[i][j-1]='O';
+			optPath[i-1][j]='O';
+		}
+		else if(align[i][j]=='/'){
+			traceOptimumPath(i-1,j-1,align,optPath);
+			optPath[i-1][j-1]='O';
+		}
+		else if(align[i][j]=='*'){
+			traceOptimumPath(i,j-1,align,optPath);
+			traceOptimumPath(i-1,j,align,optPath);
+			traceOptimumPath(i-1,j-1,align,optPath);
+			optPath[i][j-1]='O';
+			optPath[i-1][j]='O';
+			optPath[i-1][j-1]='O';
+		}
+}
+
 //ApproximateED calculation
-int calculateApproxED(string x, string y,vector<vector<char> > &align){
+int calculateApproxED(string x, string y,vector<vector<char> > &optPath){
   int i=1,j=1,u=0,m=x.length(),n=y.length();
 	while(i<=n && j<=m){
 		if(x[j-1]==y[i-1]){
 			i++;
 			j++;
 		}
+		else if(locateOPTPath(i,j,optPath)=='D'){
+			u+=2;
+			i++;
+			j++;
+		}
 		else{
 			u++;
-			if(align[i][j]=='|'){ // Go Up on
+			if(locateOPTPath(i,j,optPath)=='x'){ // Go Up if OPT path on Left
 				j++;
 			}
-			else if(align[i][j]=='-'){
+			else if(locateOPTPath(i,j,optPath)=='y'){ // Go Right if OPT path bottom
 				i++;
-			}
-			else if(align[i][j]=='+'){ // Tie breaker
-				j++;
-			}
-			else{
-				i++;
-				j++;
 			}
 			//cout<<i<<" : "<<j<<": "<<u<<endl;
 		}
@@ -112,30 +165,36 @@ int calculateApproxED(string x, string y,vector<vector<char> > &align){
 
 int main(){
   string x,y;
-  int len=40;
-  string filename="EDSearchSpace_randomX_insert_del_all"+to_string(len)+".txt";
+  int len=30;
+  string filename="EDSearchSpace_random_newAlgo"+to_string(len)+".txt";
   ofstream cout(filename);
   float maxApproxFactor= 0.0;
   srand(time(0));
-  long iter=1000000;
-  
-  while(iter--){
-    //x=getRandomBinaryString(len);//random binary string
-    //y=getRandomBinaryString(len)
+  long iter=10000000;
+  // #pragma omp parallel for reduction(max:maxApproxFactor)
+  for(int it=0;it<iter;it++){
+    x=getRandomBinaryString(len);//random binary string
+    //y=getRandomBinaryString(len);
 	//delete one from y
 	for(int i=0;i<len;i++){
 		for(int j=0;j<len;j++){
-			iter++;
-			x=getRandomBinaryString(len);
+			//iter++;
+			//x=getRandomBinaryString(len);
 			y=x;
 			y.erase(i,1);
-			//insert a char in x
+			// //insert a char in x
 			y.insert(j,to_string(rand()%2));
     		int n=x.length();
   			int m=y.length();
     		vector<vector<char> > align(m+1,vector<char>(n+1,' ')); //Alignment Vector
     		int optEditDistance= calculateED(x,y,align);
-			int approxEditDistance = calculateApproxED(x,y,align);
+			//trace opt path
+			vector<vector<char> > optPath(m+1,vector<char>(n+1,' '));
+			optPath=align;
+			traceOptimumPath(m,n,align,optPath);
+			optPath[m][n]='O';
+			//Approx ED
+			int approxEditDistance = calculateApproxED(x,y,optPath);
 
 			float approxFactor= (float)approxEditDistance/optEditDistance;
 			
@@ -160,6 +219,6 @@ int main(){
 	}
 
  }
-
+    cout<<"Worst Factor: "<<maxApproxFactor<<endl;
   return 0;
 }
