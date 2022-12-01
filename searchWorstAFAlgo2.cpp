@@ -1,7 +1,8 @@
 /*
-    Strategy 2: Algorithm Strategy proposed by Mike.
+    Strategy 3: Algorithm Strategy proposed by Michal.
     1. U= ED(i,j)+1/2D 
-    2. Move in the direction where it is minimum
+    2. Move in the direction where it is minimum for D/4 steps
+	3. Tie break is to move in one direction (Y string in this case)
 */
 
 #include<iostream>
@@ -11,6 +12,7 @@
 #include<time.h>
 #include<string>
 #include<float.h>
+#include<cmath>
 
 using namespace std;
 
@@ -88,15 +90,18 @@ int calculateED(string x, string y, vector<vector<int> > &ED){
 
 /*
 	Locate whether ED(i,j)+D/2 is underneath (i,j) or Left of (i,j)
-	returns 'x' if x-index to be incremented and respt. 'y'
+	returns <'x',D> if x-index to be incremented and respt. 'y' along with D(i-i' or j-j') where min was obtained
 */
-char findNextMove(int i, int j, vector<vector<int> > & ED){
+pair<char,int> findNextMove(int i, int j, vector<vector<int> > & ED){
+	pair<char,int> result;
 	float vert= ED[i][j],hor=ED[i][j];
+	int vert_D=1,hor_D=1;
     // ED[x'][j] underneath (i,j)
     for (int z=i;z>=0;z--){
         float U= ED[z][j] + (float)(i-z)/2;
         if(U < vert){
             vert= U;
+			vert_D=(i-z);
         }
     }
     // ED[i][x'] left of (i,j)
@@ -104,18 +109,27 @@ char findNextMove(int i, int j, vector<vector<int> > & ED){
         float U= ED[i][z] + (float)(j-z)/2;
         if(U < hor){
             hor= U;
+			hor_D=(j-z);
         }
     }
     //cout<<"Vert "<<vert<<"\n Hor "<<hor<<endl;
     if(vert < hor){
-        return 'x';
+		result.first='x';
+		result.second=vert_D;
+        //return 'x';
     }
     else if ( vert > hor){
-        return 'y';
+		result.first='y';
+		result.second=hor_D;
+        //return 'y';
     }
     else{
-        return 'D';
+		result.first='D';
+		result.second=vert_D;
+        //return 'D';
     }
+	//cout<<result.first<<" | "<<result.second<<endl;
+	return result;
 }
 
 /*
@@ -129,52 +143,58 @@ int calculateApproxED(string x, string y,vector<vector<int> > &ED){
 			i++;
 			j++;
 		}
-		else if(findNextMove(i,j,ED)=='x'){
-            u++;
-            j++;
+		else if(findNextMove(i,j,ED).first=='x'){
+            //u++;
+			int steps= ceil((findNextMove(i,j,ED).second)/4.0);
+			u+=steps;
+            j+=steps;
         }
-        else if(findNextMove(i,j,ED)=='y'){
-            u++;
-            i++;
+        else if(findNextMove(i,j,ED).first=='y'){
+            //u++;
+			int steps= ceil((findNextMove(i,j,ED).second)/4.0);
+			u+=steps;
+            i+=steps;
         }
-        else if(findNextMove(i,j,ED)=='D'){
-            u++;
-            i++;
-            //j++;
+        else if(findNextMove(i,j,ED).first=='D'){
+            //u++;
+			int steps= ceil((findNextMove(i,j,ED).second)/4.0);
+			u+=steps;
+            i+=steps;
         }
+		//cout<<i<<" | "<<j<<" | "<<u<<endl;
 	}
 	int unprocessed_chars=0;
 	if(i<n || j <m){
-		if(n-i>0)
-			unprocessed_chars+=n-i;
-		else if(m-j > 0)
-			unprocessed_chars+=m-j;
+		if(n-i>=0)
+			unprocessed_chars+=n-i+1;
+		else if(m-j >= 0)
+			unprocessed_chars+=m-j+1;
 	}
 	return u + unprocessed_chars;
 };
 
 int main(){
   string x,y;
-  int len=50;
+  int len=20;
   string filename="EDSearchSpace_Algo1_WithSubs_tie_RU_"+to_string(len)+".txt";
-  ofstream cout(filename);
+  //ofstream cout(filename);
   float maxApproxFactor= 0.0;
   srand(time(0));
-  long iter=1000000;
+  long iter=10;
   
   while(iter--){
-    //x=getRandomBinaryString(len);//random binary string
-    //y=getRandomBinaryString(len)
+    x=getRandomBinaryString(len);//random binary string
+    y=getRandomBinaryString(len);
 	//delete one from y
-	for(int i=0;i<len;i++){
-		for(int j=0;j<len;j++){
-			iter++;
-			x=getRandomBinaryString(len);
-			y=x;
-			y.erase(i,1);
-			//insert a char in x
-			y.insert(j,to_string(rand()%2));
-    		int n=x.length();
+	// for(int i=0;i<len;i++){
+	// 	for(int j=0;j<len;j++){
+	// 		iter++;
+	// 		x=getRandomBinaryString(len);
+	// 		y=x;
+	// 		y.erase(i,1);
+	// 		//insert a char in x
+	// 		y.insert(j,to_string(rand()%2));
+     		int n=x.length();
   			int m=y.length();
     		//vector<vector<char> > align(m+1,vector<char>(n+1,' ')); //Alignment Vector
 			vector<vector<int> > ED(m+1,vector<int>(n+1,0)); //Dynamic Progr Table
@@ -184,14 +204,14 @@ int main(){
 			float approxFactor= (float)approxEditDistance/optEditDistance;
 			
 			if(approxFactor > maxApproxFactor){
-				maxApproxFactor=approxFactor;
+				maxApproxFactor=approxFactor;}
 				cout<<"################################"<<endl;
 				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
 				cout<<"Edit Distance = "<< optEditDistance<<endl;
 				cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
 				cout<<"Approximation Factor = "<<approxFactor<<endl;
 				cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
-			}
+			//}
 			/*if(iter%2000==0){
 				cout<<"################################"<<endl;
 				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
@@ -200,8 +220,8 @@ int main(){
 				cout<<"Approximation Factor = "<<approxFactor<<endl;
 				cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
 			}*/
-		}
-	}
+		//}
+	//}
 
  }
 

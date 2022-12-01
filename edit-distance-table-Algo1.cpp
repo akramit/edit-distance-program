@@ -2,7 +2,7 @@
 1. Compute Edit Distance Table
 2. Show OPT path and Algorithms Path
 3. Show Alignment of Chars as -,|,/,+,* denoting Left, Top, Diagonal, and Tie
-4. ApproxAlgo used is -> At (i,j), move in direction from which min ED[i][j]+D/2 was obtained. Tie break is diagonal move
+4. ApproxAlgo used is -> At (i,j), move in direction from which min ED[i][j]+D/2 was obtained. Tie break is UP move.
 */
 #include<iostream>
 #include<vector>
@@ -67,15 +67,16 @@ int approxEditDistance(string x, string y,vector<vector<int> >&ED,vector<vector<
         else if(findNextMove(i,j,ED)=='D'){
             u++;
             i++;
-            j++;
+            //j++;
         }
+        //cout<<i<<" | "<<j<<" | "<<u<<endl;
 	}
 	int unprocessed_chars=0;
-	if(i<n || j <m){
-		if(n-i>0)
-			unprocessed_chars+=n-i;
-		else if(m-j > 0)
-			unprocessed_chars+=m-j;
+	if(i<=n || j <=m){
+		if(n-i>=0)
+			unprocessed_chars+=n-i+1;
+		else if(m-j >= 0)
+			unprocessed_chars+=m-j+1;
 	}
 	return u + unprocessed_chars;
 };
@@ -156,20 +157,42 @@ int main(){
 
 	string
 	
-x="0111011001|01010101",
-y="1101011001|01010101"; //Gives approx factor = 4.5 with new strategy of tie breaking
+//x="0111011001",
+//y="1101011001"; //Gives approx factor = 4.5 with new strategy of tie breaking
 //x="00010110110001001001",
 //y="00101011011000100001";
-//x="011101100100010110110001001001101110010011111011100011001110",
-//y="110101100100101011011000100001101110101001111101110011001110"; // Approx factor 5
+//x="010010010110011100110000011101100100010110110001001000100000100010000",
+//y="010010011101100111110000110101100100101011011000100001000010000010000";
 //x="0100111011001|0101010101",
 //y="1011101011001|0101010110";
 //x="11010001001001101000010110110001001001",
 //y="1010001010010011010001010110110001001";
 //x="0111100110110110101001001000100000011",//
 //y="0111001010110110101001001000100000011";// Approx factor = 14
-//x="101010010010101101010101001001",
-//y="100101001001010110101010001001";
+//x="1100001110110110101010110110111011100010",
+//y="1100011010110110101010110110111011100010";
+//x="0010110110101001010110110111010100010000",
+//y="0001011011010101010110110111010100010000";
+//x="110100100101010110110101010010",
+//y="101010010010101010110101010010";
+// x="111011011101111011000101011010",
+// y="110101101110111101100101011010";
+//x="0011101100101011", //Bug approx factor = 0.5
+//y="0001110110010101";
+//x="111011011001110111010011011101",
+//y="110100001101100111010011011101";
+//x="aaaaaabcdefghijklmnopqrstuvwxyz",
+//y="aaaaaaijklmnopqrstuvwxyz";
+//x="abcdefgh",
+//y="bcdefgh";
+//x="01001110110010100111011001",
+//y="11101100101001110110010100";
+//x="010010010110011100110000",
+//y="010010011101100111110000";
+//x="abcdefghijklmnabcdefghijklmnabcdefghijklmnabcdefghijklmnabcdefghijklmn",
+//y="hijklmnabcdefghijklmnabcdefghijklmnabcdefghijklmnabcdefghijklmnabcdefg";
+x="01000111100100011110010001111001000111100100011110",
+y="11110010001111001000111100100011110010001111001000";
 	//cin>>x;
 	int n=x.length();
 	//cout<<"String Y: \n";
