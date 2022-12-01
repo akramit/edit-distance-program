@@ -204,14 +204,14 @@ int main(){
 			float approxFactor= (float)approxEditDistance/optEditDistance;
 			
 			if(approxFactor > maxApproxFactor){
-				maxApproxFactor=approxFactor;}
+				maxApproxFactor=approxFactor;
 				cout<<"################################"<<endl;
 				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
 				cout<<"Edit Distance = "<< optEditDistance<<endl;
 				cout<<"Approx Edit Distance = "<< approxEditDistance<<endl;
 				cout<<"Approximation Factor = "<<approxFactor<<endl;
 				cout<<"Max Approx Factor "<<maxApproxFactor<<endl;
-			//}
+			}
 			/*if(iter%2000==0){
 				cout<<"################################"<<endl;
 				cout<<endl<<"X: "<<x<<endl<<"Y: "<<y<<endl;
