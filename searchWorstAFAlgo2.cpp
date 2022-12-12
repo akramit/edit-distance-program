@@ -176,7 +176,7 @@ int calculateApproxED(string x, string y,vector<vector<int> > &ED){
 int main(){
   string x,y;
   int len=20;
-  string filename="EDSearchSpace_Algo1_WithSubs_tie_RU_"+to_string(len)+".txt";
+  string filename="EDSearchSpace_Algo2_len_"+to_string(len)+".txt";
   //ofstream cout(filename);
   float maxApproxFactor= 0.0;
   srand(time(0));
